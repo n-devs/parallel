@@ -1,33 +1,46 @@
 import { Database } from "./Database";
+import { Fetch } from "./Fetch";
+import { Fn } from "./Fn";
+import { Store } from "./Store";
+import { Cache } from "./Cache";
 
 export class Parallel {
-    public worker: Worker | null = null;
+    public databasseWorker: Worker | null = null;
+    public storeWorker: Worker | null = null;
+    public fnWorker: Worker | null = null;
+    public fetchWorker: Worker | null = null;
+    public cacheWorker: Worker | null = null;
+
     constructor() { }
 
     public init() {
-        this.worker = new Worker(new URL("./worker.ts", import.meta.url), { type: "module" });
+        this.databasseWorker = new Worker(new URL("./databases.worker.ts", import.meta.url), { type: "module" });
+        this.storeWorker = new Worker(new URL("./store.worker.ts", import.meta.url), { type: "module" });
+        this.fnWorker = new Worker(new URL("./fn.worker.ts", import.meta.url), { type: "module" });
+        this.fetchWorker = new Worker(new URL("./fetch.worker.ts", import.meta.url), { type: "module" });
+        this.cacheWorker = new Worker(new URL("./cache.worker.ts", import.meta.url), { type: "module" });
+
     }
 
     public database(name: string) {
-        // this.worker?.postMessage({ type: 'database', name: name }) || null;
-        return new Database(this.worker, name);
+        return new Database(this.databasseWorker, name);
 
     }
 
-    public store(name: string) {
-        return this.worker?.postMessage({ type: 'store', name: name }) || null;
+    public store() {
+        return new Store(this.storeWorker)
     }
 
     public cache(name: string) {
-        return
+        return new Cache(this.cacheWorker, name);
     }
 
-    public fetch(name: string) {
-        return
+    public fetch() {
+        return new Fetch(this.fetchWorker)
     }
 
-    public fn(name: string) {
-        return
+    public fn(key: string, _fn: Function) {
+        return new Fn(this.fnWorker, key, _fn);
     }
 
 
